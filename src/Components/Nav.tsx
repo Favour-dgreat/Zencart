@@ -3,13 +3,15 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SignInButton,UserButton,SignedIn,SignedOut } from "@clerk/nextjs";
+import Logo from "./Logo";
 
 
 export const Nav = () => {
   const pathname = usePathname();
 
   return (
-    <nav className="flex justify-center items-center gap-4 p-4 ">
+    <nav className="bg-gray-950  flex justify-center items-center gap-4 p-4 ">
+      <Logo />
       <Link 
       href="/"
       className={pathname === "/" ? "font-bold underline" : "text-indigo-600"}
