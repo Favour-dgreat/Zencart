@@ -1,36 +1,65 @@
-import {create} from "zustand";
-import axios from "axios";
-
-export type product = {
-    id:string;
-    title:string;
-    price:number;
-    image:string;
-    description:string;
-    category:string;
-}
-
-type productstate = {
-    products: product[];
-    loading: boolean;
-    error : string | null;
-    fetchProducts: () => Promise<void>;
-
-}
+import { create } from "zustand";
 
 
-export const useProductStore = create<productstate>((set)=>({
-    products: [],
-    loading: false,
-    error: null,
-    fetchProducts:  async () => {
-        set({loading:true,error:null});
-        try{
-            const res = await axios.get<product[]>("/api/products");
-            if(!res.ok) throw new Error("Failed to fetch products");
-            set({products: res.data, loading:false});
-        }catch (error:any){
-            set({error: error.message, loading:false});
-        }
+
+
+
+type Product = {
+  id: string;
+  title: string;
+  description: string;
+  price: number;
+  image: string;
+  category: string;
+};
+
+type ProductStore = {
+  products: Product[];
+  filtered: Product[];
+  categories: string[];
+  selectedCategory: string;
+  loading: boolean;
+  error: string | null;
+
+  fetchProducts: () => Promise<void>;
+  filterByCategory: (category: string) => void;
+};
+
+export const useProductStore = create<ProductStore>((set) => ({
+  products: [],
+  filtered: [],
+  categories: [],
+  selectedCategory: "all",
+  loading: false,
+  error: null,
+
+  fetchProducts: async () => {
+    set({ loading: true });
+
+    try {
+      const res = await fetch("/api/products");
+      if (!res.ok) throw new Error("Failed to fetch products");
+
+      const data: Product[] = await res.json();
+      const cats = ["all", ...new Set(data.map((p) => p.category))];
+
+      set({
+        products: data,
+        filtered: data,
+        categories: cats,
+        loading: false,
+      });
+    } catch {
+      set({ error: "Failed to fetch products", loading: false });
     }
-}))
+  },
+
+  filterByCategory: (category) =>
+    set((state) => ({
+      selectedCategory: category,
+      filtered:
+        category === "all"
+          ? state.products
+          : state.products.filter((p) => p.category === category),
+    })),
+}));

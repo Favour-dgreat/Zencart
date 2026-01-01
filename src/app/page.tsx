@@ -1,6 +1,6 @@
 import { Nav } from "@/Components/Nav";
 import { getHomeProducts } from "@/getHomeproduct";
-import Home from "@/Components/Home/Home";
+import Home from "@/app/home/page";
 import Footer from "@/Components/layout/footer";
 
 

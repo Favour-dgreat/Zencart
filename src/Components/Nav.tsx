@@ -6,6 +6,7 @@ import { SignInButton,UserButton,SignedIn,SignedOut } from "@clerk/nextjs";
 import Logo from "./Logo";
 
 
+
 export const Nav = () => {
   const pathname = usePathname();
 
@@ -16,6 +17,10 @@ export const Nav = () => {
       href="/"
       className={pathname === "/" ? "font-bold underline" : "text-indigo-600"}
       >Home</Link>
+      <Link 
+      href="/cart"
+      className={pathname === "/cart" ? "font-bold underline" : "text-indigo-600"}
+      >Cart</Link>
       <SignedOut>
            <SignInButton mode="modal"/>
       </SignedOut>

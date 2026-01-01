@@ -26,7 +26,7 @@ export default function Home({ products }: { products: Product[] }) {
             <Card>
                 <CardMedia
                     component="img"
-                    height="90"
+                    className="w-96 h-96 object-cover"
                     image={products[1].image}
                     alt="Featured Product"
                 />
@@ -51,7 +51,7 @@ export default function Home({ products }: { products: Product[] }) {
             <Card key={product.id} variant="outlined" className="p-4">
               <CardMedia
                 component="img"
-                height="70"
+                 className="w-20 object-cover h-60"
                 image={product.image}
                 alt={product.title}
               />

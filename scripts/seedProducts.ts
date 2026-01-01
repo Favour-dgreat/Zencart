@@ -1,13 +1,28 @@
 import "dotenv/config";
-
 import axios from "axios";
 import { prisma } from "../lib/prisma";
 
-async function seedProduct() {
-  const res = await axios.get("https://fakestoreapi.com/products");
-  const products: any[] = res.data;
+type CategoryKey = 'MEN' | 'WOMEN' | 'ACCESSORIES' | 'FOOTWEAR' | 'GLASSES' | 'GADGETS';
 
-  for (const p of products) {
+function mapCategory(category: string): CategoryKey {
+  switch (category.toLowerCase()) {
+    case "men's clothing":
+      return "MEN";
+    case "women's clothing":
+      return "WOMEN";
+    case "jewelery":
+      return "ACCESSORIES";
+    case "electronics":
+      return "GADGETS";
+    default:
+      return "ACCESSORIES";
+  }
+}
+
+async function seedProducts() {
+  const { data } = await axios.get('https://fakestoreapi.com/products');
+
+  for (const p of data) {
     await prisma.product.upsert({
       where: { id: String(p.id) },
       update: {
@@ -15,7 +30,7 @@ async function seedProduct() {
         price: p.price,
         image: p.image,
         description: p.description,
-        category: p.category,
+        category: mapCategory(p.category),
       },
       create: {
         id: String(p.id),
@@ -23,14 +38,14 @@ async function seedProduct() {
         price: p.price,
         image: p.image,
         description: p.description,
-        category: p.category,
+        category: mapCategory(p.category),
       },
     });
   }
 
-  console.log("Products Seeded Successfully");
+  console.log("Products seeded successfully!");
 }
 
-seedProduct()
+seedProducts()
   .catch(console.error)
   .finally(() => prisma.$disconnect());

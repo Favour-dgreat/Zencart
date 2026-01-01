@@ -30,7 +30,7 @@ model Product {
   description String
   price       Float
   image       String
-  category    String
+  category    Category
   createdAt   DateTime @default(now())
 
   orderItems  OrderItem[]
@@ -55,4 +55,13 @@ model OrderItem {
 
   order     Order   @relation(fields: [orderId], references: [id])
   product  Product @relation(fields: [productId], references: [id])
+}
+
+enum Category {
+  MEN
+  WOMEN
+  ACCESSORIES
+  FOOTWEAR
+  GLASSES
+  GADGETS
 }
