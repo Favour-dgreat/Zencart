@@ -55,7 +55,7 @@ export default function Home({ products }: { products: Product[] }) {
                 image={product.image}
                 alt={product.title}
               />
-              <h3 className="font-semibold mt-2">{product.title}</h3>
+              <h3 className="font-semibold mt-2 line-clamp-1">{product.title}</h3>
               <p className="text-gray-600">${product.price}</p>
             </Card>
           ))}

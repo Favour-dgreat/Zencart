@@ -25,7 +25,7 @@ export default function AddButton({ prod }: { prod: Product }) {
 
     console.log("Added to cart:", prod);
 
-    router.push("/cartstore"); // ✅ navigate AFTER click
+    router.push("/cartstore");
   };
 
   return (

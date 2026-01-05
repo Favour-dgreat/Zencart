@@ -65,3 +65,9 @@ enum Category {
   GLASSES
   GADGETS
 }
+
+enum OrderStatus {
+  PENDING
+  PAID
+}
+

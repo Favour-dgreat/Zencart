@@ -3,6 +3,8 @@
 import { useCartStore } from "@/Store/cartStore";
 import Card from "@mui/material/Card";
 import CardMedia from "@mui/material/CardMedia";
+import Button from "@mui/material/Button";
+import OrderButton from "./Orderbutton";
 
 
 
@@ -24,56 +26,64 @@ export default function CartPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-6">Your Cart</h1>
-
+    <div className="   max-w-4xl mx-auto p-6">
+      <h1 className="text-2xl flex items-center font-bold mb-6">Your Cart</h1>
+         <div className="grid grid-cols-2 gap-6">
       {items.map((item) => (
+        
         <Card
           key={item.id}
-          className="flex items-center gap-4 border-b py-4"
+          className="flex flex-col items-center gap-4 border-b py-4"
         >
           <CardMedia
             component="img"
             image={item.image}
             alt={item.title}
-            className="w-20 h-20 object-contain"
+            className="w-70 h-80 object-cover "
           />
-
+            
+            <div className="flex flex-col items-center justify-between">
           <div className="flex-1">
-            <h2 className="font-semibold">{item.title}</h2>
+            <h2 className="font-semibold line-clamp-2">{item.title}</h2>
             <p className="text-gray-600">{"$" + item.price}</p>
+          
           </div>
 
           {/* Quantity controls */}
           <div className="flex items-center gap-2">
-            <button
+            <Button
               onClick={() => decreaseQty(item.id)}
               className="px-3 py-1 bg-gray-200 rounded"
             >
               −
-            </button>
+            </Button>
 
             <span className="font-semibold">{item.quantity}</span>
 
-            <button
+            <Button
               onClick={() => increaseQty(item.id)}
               className="px-3 py-1 bg-gray-200 rounded"
             >
               +
-            </button>
+            </Button>
           </div>
 
-          <button
+          <Button
             onClick={() => removeFromCart(item.id)}
             className="ml-4 text-red-500 hover:underline"
           >
             Remove
-          </button>
+          </Button>
+          </div>
         </Card>
+        
       ))}
+      </div>
 
-      <div className="text-right mt-6 font-semibold">
+      <div className="flex flex-row items-center justify-between gap-6 text-right mt-6 font-semibold">
+        
         Total: {"$" + total}
+        <OrderButton />
       </div>
     </div>
   );

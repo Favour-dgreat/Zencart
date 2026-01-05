@@ -35,15 +35,15 @@ export default function CartPage() {
         <CategoriesSidebar />
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 flex-1">
           {displayProducts.map((product) => (
-            <Card key={product.id} className="shadow-lg rounded-lg overflow-hidden">
+            <Card key={product.id} className=" flex flex-col  shadow-lg rounded-lg overflow-hidden">
               <CardMedia
                 component="img"
                 image={product.image}
                 alt={product.title}
-                className="object-cover h-60 w-full"
+                className="object-cover h-60 w-80 mx-auto mt-4"
               />
               <div className="p-4">
-                <h2 className="text-lg font-semibold mb-2">{product.title}</h2>
+                <h2 className="text-lg font-semibold mb-2 line-clamp-1">{product.title}</h2>
                 <p className="text-gray-700 mb-4">${product.price.toFixed(2)}</p>
                 
               </div>
