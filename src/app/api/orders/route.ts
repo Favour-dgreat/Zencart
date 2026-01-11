@@ -1,14 +1,27 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { PrismaClient } from "@prisma/client";
+
 import { auth } from "@clerk/nextjs/server";
 
+interface OrderItem {
+  productId: string;
+  quantity: number;
+}
+
+interface OrderRequest {
+  items: OrderItem[];
+  total: number;
+}
+
+export const runtime = "nodejs"; // ✅ REQUIRED
 export async function POST(req: Request) {
-  const { userId } = await auth();
+  const { userId } = auth();
+
   if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: "Unauthenticated" }, { status: 401 });
   }
 
-  const { items, total } = await req.json();
+  const { items, total } = (await req.json()) as OrderRequest;
 
   // find user
   const user = await prisma.user.findUnique({
@@ -25,11 +38,14 @@ export async function POST(req: Request) {
       total,
       status: "PENDING",
       items: {
-        create: items.map((item: any) => ({
+        create: items.map((item: OrderItem) => ({
           productId: item.productId,
           quantity: item.quantity,
         })),
       },
+    },
+    include: {
+      items: true,
     },
   });
 
