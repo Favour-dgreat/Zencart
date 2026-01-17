@@ -13,6 +13,9 @@ type Product = {
 
 
 export default function Home({ products }: { products: Product[] }) {
+  if(!products || products.length === 0) {
+    return <div>No products available.</div>;
+  }
   return (
     <>
    <section>
@@ -27,7 +30,7 @@ export default function Home({ products }: { products: Product[] }) {
                 <CardMedia
                     component="img"
                     className="w-96 h-96 object-cover"
-                    image={products[1].image}
+                    image={products?.[1]?.image || '/placeholder.png'}
                     alt="Featured Product"
                 />
             </Card>
