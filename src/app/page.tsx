@@ -9,7 +9,7 @@ export default async function Page() {
   return (
     <>
       <Nav/>
-      <Home products={products}/>
+      <Home products={products as any}/>
       <Footer/>
     </>
   );

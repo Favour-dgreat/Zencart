@@ -20,7 +20,7 @@ export async function POST(req: Request) {
   }
 
   // Get the headers from the request
-  const headerPayload = headers();
+  const headerPayload = await headers();
   const svix_id = headerPayload.get("svix-id");
   const svix_timestamp = headerPayload.get("svix-timestamp");
   const svix_signature = headerPayload.get("svix-signature");
@@ -115,18 +115,24 @@ async function handleUserCreated(userData: any) {
     return;
   }
 
-  
+  try {
     // Check if user already exists (idempotency)
-  await prisma.user.upsert({
-  where: { clerkId: id },
-  update: {
-    email,
-  },
-  create: {
-    clerkId: id,
-    email,
-  },
-});
+    await prisma.user.upsert({
+      where: { clerkId: id },
+      update: {
+        email,
+      },
+      create: {
+        clerkId: id,
+        email,
+      },
+    });
+
+    console.log(`✅ User created in database: ${id}`);
+  } catch (error: any) {
+    console.error(`❌ Failed to create user ${id}:`, error.message);
+  }
+}
 
 async function handleUserUpdated(userData: any) {
   console.log("🔄 Handling user.updated event");

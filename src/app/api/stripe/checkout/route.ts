@@ -46,7 +46,7 @@ export async function POST(req: Request) {
   });
 
   const total = line_items.reduce(
-    (sum, li) => sum + li.price_data.unit_amount * li.quantity,
+    (sum: number, li: typeof line_items[number]) => sum + li.price_data.unit_amount * li.quantity,
     0
   ) / 100;
 
