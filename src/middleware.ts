@@ -1,18 +1,53 @@
-// proxy.ts
-import { clerkMiddleware,createRouteMatcher } from "@clerk/nextjs/server";
+// proxy.ts - UPDATED VERSION
+import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { NextResponse } from "next/server";
 
-const isprotectedRoute = createRouteMatcher(["/mock-users"])
+// Define protected routes
+const isProtectedRoute = createRouteMatcher([
+  "/order(.*)",
+  "/api/orders(.*)",
+  "/mock-users(.*)",
+]);
 
-export default clerkMiddleware(async (auth,req)=>{
-    if(isprotectedRoute(req)) await auth.protect()
+// Define public routes
+const isPublicRoute = createRouteMatcher([
+  "/",
+  "/api/orders(.*)",
+  "/api/products(.*)",
+  "/api/webhooks(.*)",
+  "/cartstore(.*)",
+  "/sign-in(.*)",
+  "/sign-up(.*)",
+]);
+
+export default clerkMiddleware(async (auth, req) => {
+  const url = req.nextUrl;
+  const { userId } = await auth();
+  
+  // Skip auth checks for public routes
+  if (isPublicRoute(req)) {
+    return NextResponse.next();
+  }
+  
+  // Handle protected routes
+  if (isProtectedRoute(req)) {
+    // If user is not authenticated, redirect to sign-in
+    if (!userId) {
+      const signInUrl = new URL("/sign-in", req.url);
+      signInUrl.searchParams.set("redirect_url", url.pathname);
+      return NextResponse.redirect(signInUrl);
+    }
+    
+    // User is authenticated, allow access
+    return NextResponse.next();
+  }
+  
+  // For all other routes, just continue
+  return NextResponse.next();
 });
-
 
 export const config = {
   matcher: [
-    // Skip Next.js internals and all static files, unless found in search params
-    "/((?!_next|[^?]*\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
-    // Always run for API routes
-    "/(api|trpc)(.*)",
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };
