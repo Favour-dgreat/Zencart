@@ -1,12 +1,15 @@
 import { NextResponse } from "next/server";
-import Stripe from "stripe";
 import { prisma } from "@/lib/prisma";
+import Stripe from "stripe";
 
-export const runtime = "nodejs";
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs"; // Optional, keeps Node API runtime
 
 export async function POST(req: Request) {
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+    apiVersion: "2025-12-15.clover",
+  });
+
   const body = await req.text();
   const sig = req.headers.get("stripe-signature")!;
 
@@ -24,7 +27,6 @@ export async function POST(req: Request) {
 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
-
     const orderId = session.metadata?.orderId;
 
     if (orderId) {
