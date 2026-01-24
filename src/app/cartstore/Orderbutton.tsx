@@ -7,35 +7,41 @@ import { useRouter } from "next/navigation";
 import axios from "axios";
 
 export default function OrderButton() {
-    const cartitems = useCartStore((state) => state.items);
-    const clearCart = useCartStore((state) => state.clearCart);
-    const router = useRouter();
+  const cartitems = useCartStore((state) => state.items);
+  const clearCart = useCartStore((state) => state.clearCart);
+  const router = useRouter();
 
-    const handleOrder = async () => {
-        try {
-            const res = await axios.post(
-                '/api/orders',
-                { items: cartitems },
-                {
-                    headers: { "Content-Type": "application/json" },
-                }
-            );
+ const handleOrder = async () => {
+  try {
+    // 1️⃣ Create order
+    const orderRes = await axios.post("/api/orders", {
+      items: cartitems,
+    });
 
-            if (res.status < 200 || res.status >= 300) {
-                throw new Error('Failed to place order');
-            }
+    const orderId = orderRes.data.orderId;
 
-            clearCart();
-            router.push('/order');
-        } catch (error) {
-            console.error('Order error:', error);
-            
-        }
-    }
+    // 2️⃣ Pay for order
+    const stripeRes = await axios.post("/api/stripe/checkout", {
+      orderId,
+    });
 
-    return (
-        <Button variant="contained" startIcon={<ShoppingCartIcon />} onClick={handleOrder}>
-            Place Order
-        </Button>
-    );
+    window.location.href = stripeRes.data.url;
+  } catch (err) {
+    console.error("Order failed:", err);
+  }
+
+  clearCart();
+};
+
+
+  return (
+    <Button
+      variant="contained"
+      startIcon={<ShoppingCartIcon />}
+      onClick={handleOrder}
+      disabled={cartitems.length === 0}
+    >
+      Place Order
+    </Button>
+  );
 }

@@ -13,6 +13,10 @@ export async function POST(req: Request) {
   const body = await req.text();
   const sig = req.headers.get("stripe-signature")!;
 
+  if(!sig) {
+    return NextResponse.json({ error: "Missing signature" }, { status: 400 });
+  }
+
   let event: Stripe.Event;
 
   try {
@@ -22,6 +26,7 @@ export async function POST(req: Request) {
       process.env.STRIPE_WEBHOOK_SECRET!
     );
   } catch {
+    console.error("⚠️  Webhook signature verification failed.");
     return NextResponse.json({ error: "Webhook error" }, { status: 400 });
   }
 
@@ -29,12 +34,17 @@ export async function POST(req: Request) {
     const session = event.data.object as Stripe.Checkout.Session;
     const orderId = session.metadata?.orderId;
 
-    if (orderId) {
-      await prisma.order.update({
-        where: { id: orderId },
-        data: { status: "PAID" },
-      });
+    if(!orderId) {
+      return NextResponse.json({ error: "Missing orderId in metadata" }, { status: 400 });
     }
+
+ await prisma.order.update({
+      where: { id: orderId },
+      data: {
+        status: "PAID",
+      },
+    });
+    console.log(`✅  Order ${orderId} marked as PAID.`);
   }
 
   return NextResponse.json({ received: true });

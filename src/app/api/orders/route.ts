@@ -1,99 +1,88 @@
-// src/app/api/orders/route.ts - UPDATED
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
-import { auth } from "@clerk/nextjs/server";
-// import { GET } from "../products/route";
-
-const prisma = new PrismaClient();
+import { prisma } from "@/lib/prisma";
+import { syncUserWithClerk } from "@/lib/syncUserWithClerk";
 
 export const runtime = "nodejs";
 
+/* =======================
+   GET — fetch user orders
+======================= */
 export async function GET() {
-  const { userId } = await auth();
-
-  if (!userId) {
-    return NextResponse.json(
-      { error: "Unauthenticated. Please sign in." },
-      { status: 401 }
-    );
-  }
-
-  // Find user in database
-  const user = await prisma.user.findUnique({
-    where: { clerkId: userId },
-  });
-
-  if (!user) {
-    return NextResponse.json(
-      { error: "User not found." },
-      { status: 404 }
-    );
-  }
-
-  // Fetch orders for the user
-  const orders = await prisma.order.findMany({
-    where: { userId: user.id },
-    include: { items: true },
-     orderBy: { createdAt: "desc" },
-  });
-
-  return NextResponse.json(orders);
-
-}
-
-export async function POST(req: Request) {
   try {
-    // Get authenticated user from Clerk
-    const { userId } = await auth();
-    
-    if (!userId) {
+    const user = await syncUserWithClerk();
+
+    if (!user) {
       return NextResponse.json(
-        { error: "Unauthenticated. Please sign in." },
+        { error: "Unauthorized" },
         { status: 401 }
       );
     }
 
-    // Find user in database (should exist via webhook)
-    const user = await prisma.user.findUnique({
-      where: { clerkId: userId },
+    const orders = await prisma.order.findMany({
+      where: { userId: user.id },
+      include: {
+        items: {
+          include: { product: true },
+        },
+      },
+      orderBy: { createdAt: "desc" },
     });
 
-
-if (!user) {
-  return NextResponse.json(
-    {
-      error: "User profile not ready yet",
-      message: "Please wait a moment and try again.",
-      retry: true,
-    },
-    { status: 409 }
-  );
+    return NextResponse.json(orders);
+  } catch (error: any) {
+    console.error("GET /orders error:", error);
+    return NextResponse.json(
+      { error: "Unauthorized or failed to fetch orders" },
+      { status: 401 }
+    );
+  }
 }
 
-    // Process order...
-   const { items } = await req.json();
+/* =======================
+   POST — create order
+======================= */
+export async function POST(req: Request) {
+  try {
+    const user = await syncUserWithClerk();
 
-// Fetch product prices
-const products = await prisma.product.findMany({
-  where: {
-    id: { in: items.map((i: any) => i.productId || i.id) },
-  },
-});
+    if (!user) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
 
-// Calculate total
-const total = items.reduce((sum: number, item: any) => {
-  const product = products.find(
-    (p) => p.id === (item.productId || item.id)
-  );
-  if (!product) return sum;
-  return sum + product.price * (item.quantity || 1);
-}, 0);
+    const { items } = await req.json();
 
-    // Create order in database
+    if (!items || items.length === 0) {
+      return NextResponse.json(
+        { error: "No items provided" },
+        { status: 400 }
+      );
+    }
+
+    // Fetch products
+    const products = await prisma.product.findMany({
+      where: {
+        id: { in: items.map((i: any) => i.productId || i.id) },
+      },
+    });
+
+    // Calculate total
+    const total = items.reduce((sum: number, item: any) => {
+      const product = products.find(
+        (p) => p.id === (item.productId || item.id)
+      );
+      if (!product) return sum;
+      return sum + product.price * (item.quantity || 1);
+    }, 0);
+
+    // Create order
     const order = await prisma.order.create({
       data: {
         userId: user.id,
-        total: total,
+        total,
+        status: "PENDING",
         items: {
           create: items.map((item: any) => ({
             productId: item.productId || item.id,
@@ -106,14 +95,11 @@ const total = items.reduce((sum: number, item: any) => {
     return NextResponse.json({
       success: true,
       orderId: order.id,
-      userId: user.id,
-      userEmail: user.email,
     });
-
   } catch (error: any) {
-    console.error("Error:", error);
+    console.error("POST /orders error:", error);
     return NextResponse.json(
-      { error: error.message },
+      { error: error.message || "Failed to create order" },
       { status: 500 }
     );
   }

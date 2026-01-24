@@ -1,71 +1,119 @@
-"use client"
+"use client";
 
-import { useState,useEffect } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import Image from "next/image";
+import Loading from "@/Components/Loading";
 import Error from "@/Components/Error";
+import Card from "@mui/material/Card";
+import CardMedia from "@mui/material/CardMedia";
 
+type Order = {
+  id: string;
+  total: number;
+  status: string;
+  items: {
+    id: string;
+    quantity: number;
+    product: {
+      title: string;
+      image: string;
+      price: number;
+    };
+  }[];
+};
 
 export default function OrderPage() {
-    const [orders, setOrders] = useState([]);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-    useEffect(() => {
-        async function fetchOrders() {
-            try{
-                const response = await axios.get('/api/orders');
-                setOrders(response.data);
+  useEffect(() => {
+    async function fetchOrders() {
 
-            } catch (error) {
-             console.error("Failed to fetch orders:", error);
-             <Error message="Failed to load orders." />;
-            }
-        }
-        fetchOrders();
-    }, []);
+      try {
+        const res = await axios.get("/api/orders");
+        setOrders(res.data);
+      } catch (err) {
+        console.error(err);
+        setError("Failed to load orders");
+      } finally {
+        setLoading(false);
+      }
+    }
 
- async function handlePay(order: any) {
-  const res = await fetch("/api/stripe/checkout", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      items: order.items.map((i: any) => ({
-        productId: i.productId,
-        quantity: i.quantity,
-      })),
-    }),
-  });
+    fetchOrders();
+  }, []);
 
-  const data = await res.json();
-  window.location.href = data.url;
-}
+  const handlepay = async (orderId: string) => {
+    try {
+      const res = await axios.post("/api/create-checkout-session", {
+        orderId,
+      });
+      const { url } = res.data;
+      window.location.href = url;
+    } catch (err) {
+      console.error("Error creating checkout session:", err);
+      alert("Failed to initiate payment. Please try again.");
+    }
+  }
 
+  if (loading) return <Loading />;
+  if (error) return <Error message={error} />;
 
-    return (
-        <div>
-            <h1>Your Orders</h1>
-            {orders.length === 0 ? (
-                <p>No orders found.</p>
-            ) : (
-                <ul>
-                    {orders.map((order: any) => (
-                        <li key={order.id}>
-                            <p>Order ID: {order.id}</p>
-                            <p>Total: ${order.total}</p>
-                            <p>Status: {order.status}</p>
-                            <Image src={order.imageUrl} alt="Order Image" width={200} height={200} />
-                            <h4>Items:</h4>
-                            <ul>
-                                {order.items.map((item: any) => (
-                                    <li key={item.id}>
-                                        Product ID: {item.productId}, Quantity: {item.quantity}
-                                    </li>
-                                ))}
-                            </ul>
-                        </li>
-                    ))}
-                </ul>
-            )}
-            <button className="bg-green-500 text-2xl" onClick={() => handlePay(orders[0])}>Pay First Order</button>
-        </div>
-    );
+  return (
+    <Card className="p-6">
+      <h1 className="text-2xl font-bold mb-4">Your Orders</h1>
+
+      {orders.length === 0 ? (
+        <p>No orders found.</p>
+      ) : (
+        orders.map((order) => (
+          <div
+            key={order.id}
+            className="border rounded-lg p-4 mb-6 space-y-2"
+          >
+            <p><strong>Order ID:</strong> {order.id}</p>
+            <p><strong>Total:</strong> ${order.total.toFixed(2)}</p>
+            <p>
+              <strong>Status:</strong>{" "}
+              <span
+                className={
+                  order.status === "PAID"
+                    ? "text-green-600"
+                    : "text-yellow-600"
+                }
+              >
+                {order.status}
+              </span>
+            </p>
+
+            <div className="space-y-3">
+              {order.items.map((item) => (
+                <div
+                  key={item.id}
+                  className="flex items-center gap-4"
+                >
+                  <CardMedia
+                    component="img"
+                    image={item.product.image}
+                    alt={item.product.title}
+                    style={{ width: 80, height: 80 }}
+                    className="rounded"
+                  />
+                  <div>
+                    <p>{item.product.title}</p>
+                    <p>
+                      {item.quantity} × ${item.product.price}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <button className="bg-green-500 py-2 rounded-lg w-15 text-blue-700" onClick={() => handlepay(order.id)}>Pay</button>
+          </div>
+        ))
+      )}
+    </Card>
+  );
 }
