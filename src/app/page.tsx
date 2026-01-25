@@ -1,6 +1,6 @@
 import { Nav } from "@/Components/Nav";
 import { getHomeProducts } from "@/getHomeproduct";
-import Home from "@/app/home/page";
+import Home from "@/Components/Home";
 import Footer from "@/Components/layout/footer";
 
 
@@ -9,7 +9,7 @@ export default async function Page() {
   return (
     <>
       <Nav/>
-      <Home products={products as any}/>
+      <Home products={products }/>
       <Footer/>
     </>
   );

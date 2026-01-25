@@ -1,10 +1,14 @@
-import { getHomeProducts } from "@/getHomeproduct";
 import Card from "@mui/material/Card";
 import CardMedia from "@mui/material/CardMedia";
 
-export default async function Home() {
-  const products = await getHomeProducts();
+type Product = {
+  id: number;
+  title: string;
+  price: number;
+  image: string;
+};
 
+export default function Home({ products }: { products: Product[] }) {
   if (!products.length) {
     return <div className="p-6">No products available.</div>;
   }
