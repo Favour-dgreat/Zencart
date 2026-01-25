@@ -4,11 +4,11 @@ import axios from "axios";
 
 
 export const getHomeProducts = async (): Promise<product[]> => {
-    const res = await axios.get<product[]>("https://fakestoreapi.com/products");
-
-  if (res.status !== 200) {
-    throw new Error("Failed to fetch products");
+  try {
+    const res = await axios.get<product[]>("https://fakestoreapi.com/products",{timeout: 5000});
+     return res.data as product[];
+  } catch (error) {
+    console.error("Error fetching products:", error);
+    return [];
   }
-
-  return res.data as product[];
 }
