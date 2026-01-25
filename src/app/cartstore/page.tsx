@@ -7,6 +7,7 @@ import Button from "@mui/material/Button";
 import OrderButton from "./Orderbutton";
 
 
+export const dynamic = "force-dynamic";
 
 export default function CartPage() {
   const {

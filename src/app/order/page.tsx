@@ -23,6 +23,8 @@ type Order = {
   }[];
 };
 
+export const dynamic = "force-dynamic";
+
 export default function OrderPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);

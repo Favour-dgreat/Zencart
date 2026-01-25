@@ -6,6 +6,8 @@ import CategoriesSidebar from "./CategoriesSidebar";
 import ProductGrid from "./ProductGrid";
 import Loading from "@/Components/Loading";
 
+export const dynamic = "force-dynamic";
+
 export default function ProductPage() {
   const loading = useProductStore((state) => state.loading);
   const products = useProductStore((state) => state.products);
