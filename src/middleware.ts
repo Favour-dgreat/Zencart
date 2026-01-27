@@ -10,18 +10,13 @@ const isProtectedRoute = createRouteMatcher([
   // Add any other protected paths, e.g. "/profile(.*)", "/dashboard(.*)"
 ]);
 
-// Optional: Define public routes explicitly (prevents loops)
-const isPublicRoute = createRouteMatcher([
-  "/",              // homepage
-  "/sign-in(.*)",   // Clerk's sign-in page
-  "/sign-up(.*)",   // if you use sign-up
-  // Add other public paths like "/about", "/products", etc.
-]);
-
-export default clerkMiddleware((auth, req) => {
+export default clerkMiddleware(async (auth, req) => {
   // Protect routes: redirect unauthenticated users to sign-in
   if (isProtectedRoute(req)) {
-    auth().protect();  // ← Clerk's built-in: redirects to sign-in if !userId, handles orgs too
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.redirect(new URL("/sign-in", req.url));
+    }
   }
 
   // Optional: For public routes, just continue (or add custom logic)
