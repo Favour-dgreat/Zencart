@@ -2,7 +2,13 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { prisma } from "@/lib/prisma";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+const stripeSecret = process.env.STRIPE_SECRET_KEY;
+if (!stripeSecret) {
+  throw new Error("STRIPE_SECRET_KEY environment variable is not set");
+}
+const stripe = new Stripe(stripeSecret, {
+  apiVersion: "2025-12-15.clover",
+});
 export const runtime = "nodejs";
 
 export async function POST(req: Request) {
